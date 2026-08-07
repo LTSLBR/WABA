@@ -48,31 +48,18 @@ Nunca grave tokens no repositório. Configure-os somente como variáveis secreta
 
 ## Variáveis do Coolify
 
-Copie todas as chaves de `.env.example`. Valores principais:
+Somente a infraestrutura e o acesso inicial ficam no Coolify:
 
 ```env
 NODE_ENV=production
 PORT=3000
 PUBLIC_URL=https://waba.ltsl.com.br
 DATABASE_URL=mysql://waba:SENHA@mysql:3306/waba
-
-META_GRAPH_VERSION=v23.0
-META_APP_SECRET=
-META_VERIFY_TOKEN=
-META_ACCESS_TOKEN=
-META_PHONE_NUMBER_ID=
-META_WABA_ID=
-
-BITRIX_CLIENT_ID=
-BITRIX_CLIENT_SECRET=
-BITRIX_MEMBER_ID=
-BITRIX_DOMAIN=seuportal.bitrix24.com.br
-BITRIX_LINE_ID=19
-BITRIX_CONNECTOR_ID=ltsl_waba
-BITRIX_CONNECTOR_NAME=WhatsApp LTSL
+ADMIN_PASSWORD=uma_senha_forte_com_12_ou_mais_caracteres
+CREDENTIALS_ENCRYPTION_KEY=uma_chave_aleatoria_com_32_ou_mais_caracteres
 ```
 
-`BITRIX_MEMBER_ID` pode ficar vazio na primeira instalação. Depois, ele pode ser preenchido com o `member_id` recebido pelo aplicativo.
+Após o deploy, acesse `PUBLIC_URL/admin`. As credenciais da Meta e do Bitrix são gerenciadas nessa interface e armazenadas criptografadas no MySQL.
 
 ## Deploy no Coolify
 
