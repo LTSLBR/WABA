@@ -24,11 +24,15 @@ export class BitrixClient {
 
   async call<T = unknown>(method: string, params: Record<string, unknown> = {}): Promise<T> {
     const auth = await this.token();
-    const response = await fetch(`https://${auth.domain}/rest/${method}.json`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    const domain = auth.domain.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+    const response = await fetch(`https://${domain}/rest/${method}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ ...params, auth: auth.accessToken })
     });
-    const data: any = await response.json();
+    const raw = await response.text();
+    let data: any;
+    try { data = JSON.parse(raw); }
+    catch { throw new Error(`Bitrix ${method} retornou ${response.status} ${response.headers.get('content-type') ?? ''}: ${raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 240)}`); }
     if (!response.ok || data.error) throw new Error(`Bitrix ${method}: ${data.error_description ?? data.error ?? response.status}`);
     return data.result as T;
   }
