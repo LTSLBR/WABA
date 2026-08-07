@@ -95,7 +95,8 @@ app.post('/bitrix/install', async (request, reply) => {
   const domain = String(auth.client_endpoint ?? auth.CLIENT_ENDPOINT ?? auth.domain ?? auth.DOMAIN ?? await settings.get('BITRIX_DOMAIN'));
   if (!memberId || !accessToken || !refreshToken) return reply.code(400).send({ error: 'missing_oauth_data' });
   await bitrix.install({ memberId, accessToken, refreshToken, domain, expiresAt: new Date(Date.now() + Number(auth.expires_in ?? 3600) * 1000) });
-  return reply.type('text/html').send('<!doctype html><meta charset="utf-8"><h2>WhatsApp LTSL instalado</h2><p>Abra o Contact Center e ative o conector na Linha 19.</p>');
+  const lineId = await settings.get('BITRIX_LINE_ID');
+  return reply.type('text/html').send(`<!doctype html><meta charset="utf-8"><style>body{font:16px Arial;padding:28px;color:#17233d}h2{margin-bottom:8px}.ok{display:inline-block;background:#e6f7ed;color:#15733d;padding:8px 12px;border-radius:8px;font-weight:bold}</style><h2>WhatsApp LTSL instalado</h2><p class="ok">Instalação concluída com sucesso</p><p>Abra o Contact Center e ative o conector no Canal Aberto ${escapeHtml(lineId)}.</p>`);
 });
 
 const renderSettings = async (_request: unknown, reply: any) => reply.type('text/html').send(`<!doctype html><meta charset="utf-8"><style>body{font:16px Arial;padding:28px;color:#17233d}button{background:#25d366;color:white;border:0;border-radius:8px;padding:12px 20px;font-weight:bold}</style><h2>WhatsApp LTSL</h2><p>Abra o painel administrativo para configurar as credenciais e o Canal Aberto.</p><a href="/admin" target="_top">Abrir painel administrativo</a>`);
