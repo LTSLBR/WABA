@@ -24,8 +24,10 @@ export class BitrixClient {
 
   async call<T = unknown>(method: string, params: Record<string, unknown> = {}): Promise<T> {
     const auth = await this.token();
-    const domain = auth.domain.replace(/^https?:\/\//i, '').replace(/\/$/, '');
-    const endpoint = new URL(`https://${domain}/rest/${method}.json`);
+    const base = auth.domain.startsWith('http')
+      ? new URL(auth.domain.endsWith('/') ? auth.domain : `${auth.domain}/`)
+      : new URL(`https://${auth.domain.replace(/\/$/, '')}/rest/`);
+    const endpoint = new URL(`${method}.json`, base);
     const response = await fetch(endpoint, {
       method: 'POST', headers: { Authorization: `Bearer ${auth.accessToken}`, 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify(params)
@@ -33,7 +35,7 @@ export class BitrixClient {
     const raw = await response.text();
     let data: any;
     try { data = JSON.parse(raw); }
-    catch { throw new Error(`Bitrix ${method} retornou ${response.status} ${response.headers.get('content-type') ?? ''}: ${raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 240)}`); }
+    catch { throw new Error(`Bitrix ${method} em ${endpoint.origin}${endpoint.pathname} retornou ${response.status} ${response.headers.get('content-type') ?? ''}: ${raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 240)}`); }
     if (!response.ok || data.error) throw new Error(`Bitrix ${method}: ${data.error_description ?? data.error ?? response.status}`);
     return data.result as T;
   }
