@@ -19,8 +19,8 @@ Considerando `PUBLIC_URL=https://waba.ltsl.com.br`:
 |---|---|
 | Healthcheck | `https://waba.ltsl.com.br/health` |
 | Instalação do aplicativo Bitrix | `https://waba.ltsl.com.br/bitrix/install` |
-| Configuração do conector Bitrix | `https://waba.ltsl.com.br/bitrix/settings` |
-| Evento do Bitrix | `https://waba.ltsl.com.br/webhooks/bitrix` |
+| Manipulador principal do aplicativo | `https://waba.ltsl.com.br/bitrix/settings` |
+| Evento interno `ONIMCONNECTORMESSAGEADD` | `https://waba.ltsl.com.br/webhooks/bitrix` |
 | Webhook da Meta | `https://waba.ltsl.com.br/webhooks/meta` |
 
 ## Aplicativo local Bitrix24
@@ -28,7 +28,7 @@ Considerando `PUBLIC_URL=https://waba.ltsl.com.br`:
 Crie um aplicativo local do tipo **Servidor** e configure:
 
 - URL inicial/instalação: `PUBLIC_URL/bitrix/install`
-- URL do manipulador: `PUBLIC_URL/webhooks/bitrix`
+- URL do manipulador: `PUBLIC_URL/bitrix/settings`
 - escopos: `imopenlines`, `imconnector`, `im`
 
 Depois do primeiro acesso, a instalação registra o conector `ltsl_waba` e vincula o evento `ONIMCONNECTORMESSAGEADD`. Abra o Contact Center, selecione o conector **WhatsApp LTSL** e ative-o para a Linha `19`.
