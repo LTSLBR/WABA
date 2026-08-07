@@ -59,7 +59,9 @@ app.post('/bitrix/install', async (request, reply) => {
   return reply.type('text/html').send('<!doctype html><meta charset="utf-8"><h2>WhatsApp LTSL instalado</h2><p>Abra o Contact Center e ative o conector na Linha 19.</p>');
 });
 
-app.get('/bitrix/settings', async (_request, reply) => reply.type('text/html').send(`<!doctype html><meta charset="utf-8"><style>body{font:16px Arial;padding:28px;color:#17233d}button{background:#25d366;color:white;border:0;border-radius:8px;padding:12px 20px;font-weight:bold}</style><h2>WhatsApp LTSL</h2><p>Vincular este conector ao Canal Aberto ${config.BITRIX_LINE_ID}.</p><form method="post" action="/bitrix/activate"><button type="submit">Ativar conector</button></form>`));
+const renderSettings = async (_request: unknown, reply: any) => reply.type('text/html').send(`<!doctype html><meta charset="utf-8"><style>body{font:16px Arial;padding:28px;color:#17233d}button{background:#25d366;color:white;border:0;border-radius:8px;padding:12px 20px;font-weight:bold}</style><h2>WhatsApp LTSL</h2><p>Vincular este conector ao Canal Aberto ${config.BITRIX_LINE_ID}.</p><form method="post" action="/bitrix/activate"><button type="submit">Ativar conector</button></form>`);
+app.get('/bitrix/settings', renderSettings);
+app.post('/bitrix/settings', renderSettings);
 app.post('/bitrix/activate', async (_request, reply) => { await bitrix.activate(); return reply.type('text/html').send('<!doctype html><meta charset="utf-8"><h2>Conector ativado com sucesso.</h2>'); });
 
 app.setErrorHandler((error, _request, reply) => { app.log.error(error); reply.code(500).send({ error: 'internal_error' }); });
