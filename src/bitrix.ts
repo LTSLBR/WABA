@@ -25,9 +25,10 @@ export class BitrixClient {
   async call<T = unknown>(method: string, params: Record<string, unknown> = {}): Promise<T> {
     const auth = await this.token();
     const domain = auth.domain.replace(/^https?:\/\//i, '').replace(/\/$/, '');
-    const response = await fetch(`https://${domain}/rest/${method}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ ...params, auth: auth.accessToken })
+    const endpoint = new URL(`https://${domain}/rest/${method}.json`);
+    const response = await fetch(endpoint, {
+      method: 'POST', headers: { Authorization: `Bearer ${auth.accessToken}`, 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(params)
     });
     const raw = await response.text();
     let data: any;
