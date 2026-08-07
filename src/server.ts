@@ -92,7 +92,7 @@ app.post('/bitrix/install', async (request, reply) => {
   const memberId = String(auth.member_id ?? auth.MEMBER_ID ?? '');
   const accessToken = String(auth.access_token ?? auth.AUTH_ID ?? '');
   const refreshToken = String(auth.refresh_token ?? auth.REFRESH_ID ?? '');
-  const domain = String(auth.domain ?? auth.DOMAIN ?? await settings.get('BITRIX_DOMAIN'));
+  const domain = String(auth.client_endpoint ?? auth.CLIENT_ENDPOINT ?? auth.domain ?? auth.DOMAIN ?? await settings.get('BITRIX_DOMAIN'));
   if (!memberId || !accessToken || !refreshToken) return reply.code(400).send({ error: 'missing_oauth_data' });
   await bitrix.install({ memberId, accessToken, refreshToken, domain, expiresAt: new Date(Date.now() + Number(auth.expires_in ?? 3600) * 1000) });
   return reply.type('text/html').send('<!doctype html><meta charset="utf-8"><h2>WhatsApp LTSL instalado</h2><p>Abra o Contact Center e ative o conector na Linha 19.</p>');
