@@ -101,7 +101,21 @@ app.post('/bitrix/install', async (request, reply) => {
 
 const renderSettings = async (_request: unknown, reply: any) => reply.type('text/html').send(`<!doctype html><meta charset="utf-8"><style>body{font:16px Arial;padding:28px;color:#17233d}button{background:#25d366;color:white;border:0;border-radius:8px;padding:12px 20px;font-weight:bold}</style><h2>WhatsApp LTSL</h2><p>Abra o painel administrativo para configurar as credenciais e o Canal Aberto.</p><a href="/admin" target="_top">Abrir painel administrativo</a>`);
 app.get('/bitrix/settings', renderSettings);
-app.post('/bitrix/settings', renderSettings);
+app.post('/bitrix/settings', async (request, reply) => {
+  const body = request.body as Record<string, any>;
+  const rawOptions = body?.PLACEMENT_OPTIONS ?? body?.placement_options;
+  if (!rawOptions) return renderSettings(request, reply);
+  let options: Record<string, any>;
+  try { options = typeof rawOptions === 'string' ? JSON.parse(rawOptions) : rawOptions; }
+  catch { return reply.code(400).type('text/html').send('<!doctype html><meta charset="utf-8"><h2>Configuração inválida</h2><p>O Bitrix não enviou PLACEMENT_OPTIONS em formato válido.</p>'); }
+  const line = Number(options.LINE ?? options.line);
+  const activeRaw = options.ACTIVE_STATUS ?? options.active_status ?? 1;
+  const active = !['0', 'N', 'false', ''].includes(String(activeRaw));
+  if (!Number.isInteger(line) || line <= 0) return reply.code(400).type('text/html').send('<!doctype html><meta charset="utf-8"><h2>Canal Aberto inválido</h2>');
+  await settings.set('BITRIX_LINE_ID', String(line));
+  await bitrix.configureLine(line, active ? 1 : 0);
+  return reply.type('text/html').send(`<!doctype html><meta charset="utf-8"><style>body{font:16px Arial;padding:28px;color:#17233d}.ok{background:#e6f7ed;color:#15733d;padding:12px;border-radius:8px;display:inline-block}</style><h2>WhatsApp LTSL</h2><p class="ok">Conector ${active ? 'ativado' : 'desativado'} no Canal Aberto ${line}.</p>`);
+});
 app.post('/bitrix/activate', async (_request, reply) => { await bitrix.activate(); return reply.type('text/html').send('<!doctype html><meta charset="utf-8"><h2>Conector ativado com sucesso.</h2>'); });
 
 app.setErrorHandler((error, _request, reply) => { app.log.error(error); reply.code(500).send({ error: 'internal_error' }); });
