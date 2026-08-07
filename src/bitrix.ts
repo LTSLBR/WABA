@@ -51,7 +51,12 @@ export class BitrixClient {
       PLACEMENT_HANDLER: `${this.config.PUBLIC_URL}/bitrix/settings`,
       CHAT_GROUP: false, NEED_SIGNATURE: true, EDIT_INTERNAL_MESSAGES: false, DEL_INTERNAL_MESSAGES: false
     });
-    await this.call('event.bind', { event: 'ONIMCONNECTORMESSAGEADD', handler: `${this.config.PUBLIC_URL}/webhooks/bitrix` });
+    try {
+      await this.call('event.bind', { event: 'ONIMCONNECTORMESSAGEADD', handler: `${this.config.PUBLIC_URL}/webhooks/bitrix` });
+    } catch (error) {
+      const message = error instanceof Error ? error.message.toLowerCase() : '';
+      if (!message.includes('already binded') && !message.includes('already bound')) throw error;
+    }
   }
 
   async activate(): Promise<void> {
