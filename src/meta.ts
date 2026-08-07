@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { Config } from './config.js';
 import type { IncomingMessage } from './types.js';
+import type { SettingsStore } from './settings.js';
 
 export function verifyMetaSignature(rawBody: Buffer, signature: string | undefined, secret: string): boolean {
   if (!signature?.startsWith('sha256=')) return false;
@@ -29,12 +30,13 @@ export function extractIncomingMessages(payload: any): IncomingMessage[] {
 }
 
 export class MetaClient {
-  constructor(private readonly config: Config) {}
+  constructor(private readonly config: Config, private readonly settings: SettingsStore) {}
 
   async sendText(to: string, body: string): Promise<string> {
-    const response = await fetch(`https://graph.facebook.com/${this.config.META_GRAPH_VERSION}/${this.config.META_PHONE_NUMBER_ID}/messages`, {
+    const values = await this.settings.all();
+    const response = await fetch(`https://graph.facebook.com/${values.META_GRAPH_VERSION}/${values.META_PHONE_NUMBER_ID}/messages`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${this.config.META_ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Bearer ${values.META_ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ messaging_product: 'whatsapp', recipient_type: 'individual', to, type: 'text', text: { preview_url: false, body } })
     });
     const data: any = await response.json();
