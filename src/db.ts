@@ -25,8 +25,21 @@ export class Database {
         status VARCHAR(32) NOT NULL DEFAULT 'sent',
         created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
         INDEX idx_bitrix_message (bitrix_message_id)
+      )`, `CREATE TABLE IF NOT EXISTS app_settings (
+        setting_key VARCHAR(100) PRIMARY KEY,
+        encrypted_value TEXT NOT NULL,
+        updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)
       )`];
     for (const statement of statements) await this.pool.query(statement);
+  }
+
+  async getSetting(key: string): Promise<string | null> {
+    const [rows] = await this.pool.execute<any[]>('SELECT encrypted_value FROM app_settings WHERE setting_key=? LIMIT 1', [key]);
+    return rows[0]?.encrypted_value ?? null;
+  }
+
+  async setSetting(key: string, value: string): Promise<void> {
+    await this.pool.execute('INSERT INTO app_settings(setting_key,encrypted_value) VALUES(?,?) ON DUPLICATE KEY UPDATE encrypted_value=VALUES(encrypted_value)', [key, value]);
   }
 
   async saveToken(token: OAuthToken): Promise<void> {
