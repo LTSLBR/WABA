@@ -59,12 +59,17 @@ export class BitrixClient {
     }
   }
 
-  async activate(): Promise<void> {
+  async configureLine(lineId?: number, active = 1): Promise<void> {
     const values = await this.settings.all();
-    const base = { CONNECTOR: values.BITRIX_CONNECTOR_ID, LINE: Number(values.BITRIX_LINE_ID) };
-    await this.call('imconnector.activate', { ...base, ACTIVE: '1' });
-    await this.call('imconnector.connector.data.set', { ...base, DATA: { ID: values.META_PHONE_NUMBER_ID, URL: this.config.PUBLIC_URL, URL_IM: this.config.PUBLIC_URL, NAME: values.BITRIX_CONNECTOR_NAME } });
+    const line = lineId ?? Number(values.BITRIX_LINE_ID);
+    const base = { CONNECTOR: values.BITRIX_CONNECTOR_ID, LINE: line };
+    await this.call('imconnector.activate', { ...base, ACTIVE: active ? '1' : '0' });
+    if (active) {
+      await this.call('imconnector.connector.data.set', { ...base, DATA: { ID: `${values.BITRIX_CONNECTOR_ID}_line_${line}`, URL: this.config.PUBLIC_URL, URL_IM: this.config.PUBLIC_URL, NAME: values.BITRIX_CONNECTOR_NAME } });
+    }
   }
+
+  async activate(): Promise<void> { await this.configureLine(); }
 
   async receive(message: IncomingMessage): Promise<void> {
     const values = await this.settings.all();
