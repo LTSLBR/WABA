@@ -7,7 +7,7 @@ const schema = z.object({
   DATABASE_URL: z.string().min(1),
   ADMIN_PASSWORD: z.string().min(12),
   CREDENTIALS_ENCRYPTION_KEY: z.string().min(32),
-  META_GRAPH_VERSION: z.string().regex(/^v\d+\.\d+$/).default('v23.0'),
+  META_GRAPH_VERSION: z.string().regex(/^v\d+\.\d+$/).default('v25.0'),
   META_APP_SECRET: z.string().default(''),
   META_VERIFY_TOKEN: z.string().default(''),
   META_ACCESS_TOKEN: z.string().default(''),
