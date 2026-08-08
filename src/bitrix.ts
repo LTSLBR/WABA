@@ -71,6 +71,24 @@ export class BitrixClient {
 
   async activate(): Promise<void> { await this.configureLine(); }
 
+  async status(lineId?: number): Promise<any> {
+    const values = await this.settings.all();
+    return this.call('imconnector.status', { CONNECTOR: values.BITRIX_CONNECTOR_ID, LINE: lineId ?? Number(values.BITRIX_LINE_ID) });
+  }
+
+  async markDelivered(message: { bitrixChatId: number; bitrixMessageId: number; externalChatId: string; metaMessageId: string; timestamp?: string }): Promise<void> {
+    const values = await this.settings.all();
+    await this.call('imconnector.send.status.delivery', {
+      CONNECTOR: values.BITRIX_CONNECTOR_ID,
+      LINE: Number(values.BITRIX_LINE_ID),
+      MESSAGES: [{
+        im: { chat_id: message.bitrixChatId, message_id: message.bitrixMessageId },
+        message: { id: message.metaMessageId, date: Number(message.timestamp || Math.floor(Date.now() / 1000)) },
+        chat: { id: message.externalChatId }
+      }]
+    });
+  }
+
   async receive(message: IncomingMessage): Promise<void> {
     const values = await this.settings.all();
     await this.call('imconnector.send.messages', {
