@@ -80,13 +80,17 @@ npm test
 npm run dev
 ```
 
-## Escopo da versão 1
+## Escopo atual
 
-- mensagens de texto, botões e respostas de listas na entrada;
+- mensagens de texto, botões, listas, localização, contatos, reações e respostas na entrada;
+- imagens, áudios, vídeos, documentos e figurinhas recebidos por link assinado e temporário;
 - mensagens de texto na saída;
 - criação automática da conversa no Canal Aberto;
-- confirmação de entrega ao Bitrix após aceite da Meta;
+- sincronização dos estados `sent`, `delivered`, `read` e `failed` recebidos da Meta;
+- confirmação de entrega ao Bitrix somente após o webhook real da Meta;
 - bloqueio de eventos duplicados;
 - armazenamento e renovação do OAuth Bitrix.
+- painel administrativo responsivo com métricas, atividade recente e diagnóstico Meta/Bitrix;
+- consulta do número, qualidade e templates aprovados diretamente pela API oficial.
 
-Mídias, templates, reações e sincronização posterior dos estados `sent`, `delivered`, `read` e `failed` da Meta ficam preparados para a próxima etapa.
+Na saída, templates e mídias exigem uma experiência adicional no Bitrix24 para selecionar arquivos e variáveis com segurança; a camada Meta já está preparada para mensagens tipadas por `sendMessage`.
