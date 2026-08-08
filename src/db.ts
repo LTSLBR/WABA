@@ -1,5 +1,5 @@
 import mysql, { Pool } from 'mysql2/promise';
-import type { OAuthToken } from './types.js';
+import type { OAuthToken, OutboundMessage } from './types.js';
 
 export class Database {
   readonly pool: Pool;
@@ -29,6 +29,17 @@ export class Database {
         setting_key VARCHAR(100) PRIMARY KEY,
         encrypted_value TEXT NOT NULL,
         updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)
+      )`, `CREATE TABLE IF NOT EXISTS connector_activity (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        direction ENUM('in','out','system') NOT NULL,
+        event_type VARCHAR(64) NOT NULL,
+        external_id VARCHAR(255) NULL,
+        contact_id VARCHAR(64) NULL,
+        status VARCHAR(32) NOT NULL DEFAULT 'ok',
+        detail VARCHAR(500) NULL,
+        created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+        INDEX idx_activity_created (created_at),
+        INDEX idx_activity_external (external_id)
       )`];
     for (const statement of statements) await this.pool.query(statement);
   }
@@ -66,5 +77,29 @@ export class Database {
 
   async saveOutbound(metaId: string, bitrixId: number, chatId: number, externalChatId: string): Promise<void> {
     await this.pool.execute('INSERT INTO outbound_messages(meta_message_id,bitrix_message_id,bitrix_chat_id,external_chat_id) VALUES(?,?,?,?)', [metaId, bitrixId, chatId, externalChatId]);
+  }
+
+  async getOutbound(metaId: string): Promise<OutboundMessage | null> {
+    const [rows] = await this.pool.execute<any[]>('SELECT * FROM outbound_messages WHERE meta_message_id=? LIMIT 1', [metaId]);
+    const row = rows[0];
+    return row ? { metaMessageId: row.meta_message_id, bitrixMessageId: Number(row.bitrix_message_id), bitrixChatId: Number(row.bitrix_chat_id), externalChatId: row.external_chat_id, status: row.status } : null;
+  }
+
+  async updateOutboundStatus(metaId: string, status: string): Promise<void> {
+    await this.pool.execute('UPDATE outbound_messages SET status=? WHERE meta_message_id=?', [status, metaId]);
+  }
+
+  async logActivity(direction: 'in'|'out'|'system', eventType: string, externalId?: string, contactId?: string, status='ok', detail?: string): Promise<void> {
+    await this.pool.execute('INSERT INTO connector_activity(direction,event_type,external_id,contact_id,status,detail) VALUES(?,?,?,?,?,?)', [direction, eventType, externalId ?? null, contactId ?? null, status, detail?.slice(0, 500) ?? null]);
+  }
+
+  async dashboard(): Promise<{ inbound24h: number; outbound24h: number; failed24h: number; recent: any[] }> {
+    const [counts] = await this.pool.query<any[]>(`SELECT
+      SUM(direction='in' AND created_at >= NOW() - INTERVAL 24 HOUR) inbound24h,
+      SUM(direction='out' AND created_at >= NOW() - INTERVAL 24 HOUR) outbound24h,
+      SUM(status='failed' AND created_at >= NOW() - INTERVAL 24 HOUR) failed24h
+      FROM connector_activity`);
+    const [recent] = await this.pool.query<any[]>('SELECT direction,event_type,contact_id,status,detail,created_at FROM connector_activity ORDER BY id DESC LIMIT 12');
+    return { inbound24h: Number(counts[0]?.inbound24h ?? 0), outbound24h: Number(counts[0]?.outbound24h ?? 0), failed24h: Number(counts[0]?.failed24h ?? 0), recent };
   }
 }
